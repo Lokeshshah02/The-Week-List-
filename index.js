@@ -2,20 +2,21 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+// const jwt = require("jsonwebtoken");
+const userRouter = require('./Routes/userRoutes')
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-const User = mongoose.model('user', {
-  fullName: String,
-  email: String,
-  password: String,
-});
+const User = require("./model/userSchema");
+const errorhandler = require("./middleware/errorHandler");
 
 app.get("/", (req, res) => {
-  res.send("bolo");
+  res.send("Welcome");
 });
 
 //Health Api
@@ -39,23 +40,27 @@ app.get("/health", (req, res) => {
   }
 });
 
-//signUp
-
-app.post("/signup", async (req, res) => {
+//getAll users api
+app.get("/users", async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
-    await User.create({fullName, email, password})
+    const users = await User.find({});
     res.json({
       status: "SUCCESS",
-      message: "You've signed in successfully!",
+      data: users,
     });
   } catch (error) {
     res.json({
       status: "FAILED",
-      message: " OOPS Wrong Credentials!",
+      message: "Something went wrong",
     });
   }
 });
+
+
+
+app.use('/user', userRouter);
+app.use(errorhandler)
+
 
 app.listen(process.env.PORT, () => {
   mongoose
@@ -65,3 +70,4 @@ app.listen(process.env.PORT, () => {
     )
     .catch((error) => console.log(error));
 });
+
